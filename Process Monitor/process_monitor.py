@@ -50,6 +50,53 @@ def display_data(data):
     
     print("...") # Indicate that there's more data
 
+def collect_system_info():
+    """Collects system information and saves it into a timestamped CSV file."""
+    
+    # Generate filename with current timestamp
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"system_info_{timestamp}.csv"
+    
+    # Collect system info
+    info = {
+        "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        
+        # CPU
+        "CPU Count (Logical)": psutil.cpu_count(logical=True),
+        "CPU Count (Physical)": psutil.cpu_count(logical=False),
+        "CPU Usage (%)": psutil.cpu_percent(interval=1),
+        "CPU Times": psutil.cpu_times()._asdict(),
+        "CPU Stats": psutil.cpu_stats()._asdict(),
+        
+        # Memory
+        "Virtual Memory": psutil.virtual_memory()._asdict(),
+        "Swap Memory": psutil.swap_memory()._asdict(),
+        
+        # Disk
+        "Disk Partitions": [p._asdict() for p in psutil.disk_partitions()],
+        "Disk Usage (C:)": psutil.disk_usage("C:\\")._asdict(),
+        "Disk IO Counters": psutil.disk_io_counters()._asdict(),
+        
+        # Network
+        "Network Interfaces": {k: [a._asdict() for a in v] for k, v in psutil.net_if_addrs().items()},
+        "Network Stats": {k: v._asdict() for k, v in psutil.net_if_stats().items()},
+        "Network IO Counters": psutil.net_io_counters()._asdict(),
+        
+        # Sensors
+        "Battery": psutil.sensors_battery()._asdict() if psutil.sensors_battery() else "No Battery",
+        
+        # Other
+        "Boot Time": datetime.datetime.fromtimestamp(psutil.boot_time()).strftime("%Y-%m-%d %H:%M:%S"),
+        "Users": [u._asdict() for u in psutil.users()]
+    }
+    
+    # Write info to CSV
+    with open(filename, mode="w", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        for key, value in info.items():
+            writer.writerow([key, value])
+    
+
 def main():
     """
     Main loop to run the data collection.
@@ -63,8 +110,11 @@ def main():
         
         # 3. Export to a file
         save_to_file(data, 'csv')
+
+        # 4. Collect system data
+        collect_system_info()
         
-        # 4. Wait for one minute
+        # 5. Wait for one minute
         print("\nWaiting for 60 seconds before next collection...")
         time.sleep(60)
 

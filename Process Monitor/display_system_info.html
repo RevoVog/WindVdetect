@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Info Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .file-input {
+      margin: 20px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>System Information Report</h1>
+
+  <div class="file-input">
+    <input type="file" id="csvFile" accept=".csv" />
+  </div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    document.getElementById("csvFile").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const text = event.target.result;
+        displayCSV(text);
+      };
+      reader.readAsText(file);
+    });
+
+    function displayCSV(data) {
+      const rows = data.split("\n").filter(row => row.trim() !== "");
+      const tableBody = document.querySelector("#dataTable tbody");
+      tableBody.innerHTML = "";
+
+      rows.forEach(row => {
+        const cols = row.split(",");
+        const tr = document.createElement("tr");
+
+        const tdKey = document.createElement("td");
+        tdKey.textContent = cols[0].replace(/^"|"$/g, ""); // remove quotes if any
+        tr.appendChild(tdKey);
+
+        const tdValue = document.createElement("td");
+        tdValue.textContent = cols.slice(1).join(",").replace(/^"|"$/g, "");
+        tr.appendChild(tdValue);
+
+        tableBody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
