@@ -11,7 +11,7 @@ from watchdog.events import FileSystemEventHandler
 MONITORED_PATH = 'D:\\'
 
 # Define the log file path
-LOG_FILE_NAME = 'file_events.csv'
+# LOG_FILE_NAME = 'file_events.csv'
 
 # Set up logging to the console
 logging.basicConfig(level=logging.INFO,
@@ -27,13 +27,13 @@ logging.basicConfig(level=logging.INFO,
 #         writer = csv.writer(f)
 #         if not file_exists:
 #             writer.writerow(['Timestamp', 'Event Type', 'Source Path', 'Destination Path'])
-        
+
 #         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
 #         writer.writerow([timestamp, event_type, src_path, dest_path])
 
 class MyEventHandler(FileSystemEventHandler):
     """A custom event handler that logs file system events."""
-    
+
     def on_moved(self, event):
         """Called when a file or a directory is moved or renamed."""
         logging.info(f"Moved: from {event.src_path} to {event.dest_path}")
