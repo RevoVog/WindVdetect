@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Server Dashboard</title>
+</head>
+<body>
+  <h2>Connected Clients</h2>
+  <ul>
+    {% for client in clients %}
+      <li><a href="/client/{{ client }}">{{ client }}</a></li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
