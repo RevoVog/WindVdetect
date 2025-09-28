@@ -2,7 +2,10 @@ import asyncio
 import websockets
 
 async def client_program(client_id):
-    uri = f"ws://<server_ip>:8000/ws/{client_id}"
+    # CHANGE this to your server LAN IP
+    server_ip = "192.168.156.91"   # or e.g. "192.168.1.100"
+    uri = f"ws://{server_ip}:8000/ws/{client_id}"
+    
     async with websockets.connect(uri) as websocket:
         while True:
             msg = input("You: ")
