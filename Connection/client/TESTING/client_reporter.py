@@ -9,7 +9,7 @@ import psutil
 import traceback
 import websockets
 
-SERVER_WS = "ws://localhost:8000/ws?role=client"  # change to your server host if needed
+SERVER_WS = "ws://192.168.43.212:8000/ws?role=client"  # change to your server host if needed
 SEND_INTERVAL = 3  # seconds between snapshots
 
 def safe_asdict(obj):
