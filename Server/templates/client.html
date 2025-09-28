@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client {{ client_id }}</title>
+</head>
+<body>
+  <h2>Chat with Client: {{ client_id }}</h2>
+  <div id="messages"></div>
+  <input id="msg" type="text" placeholder="Type a message...">
+  <button onclick="send()">Send</button>
+
+  <script>
+    var socket = new WebSocket("ws://" + location.host + "/ws_server/{{ client_id }}");
+    var messages = document.getElementById("messages");
+
+    socket.onmessage = function(event) {
+      var p = document.createElement("p");
+      p.textContent = event.data;
+      messages.appendChild(p);
+    };
+
+    function send(){
+      let msg = document.getElementById("msg").value;
+      socket.send(msg);
+    }
+  </script>
+</body>
+</html>
