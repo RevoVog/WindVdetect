@@ -10,7 +10,7 @@ import traceback
 import websockets
 
 SERVER_WS = "ws://localhost:8000/ws?role=client"  # change to your server host if needed
-SEND_INTERVAL = 3  # seconds between snapshots
+SEND_INTERVAL = 1  # seconds between snapshots
 
 def safe_asdict(obj):
     try:
@@ -132,3 +132,5 @@ if __name__ == "__main__":
         print("Stopped by user")
     except Exception as e:
         print("Client error:", e)
+
+

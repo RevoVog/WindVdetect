@@ -1,27 +1,74 @@
 /* static/style.css */
 body {
-    background: #f4f6f8;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f6f8fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
-.container {
-    max-width: 500px;
-    margin: 80px auto;
-    background: #fff;
-    padding: 32px 24px;
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    text-align: center;
+header {
+  background: #222;
+  color: #fff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-h1 {
-    color: #1976d2;
-    margin-bottom: 16px;
+footer {
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  background: #eee;
 }
 
-p {
-    color: #333;
-    font-size: 1.1em;
+/* Grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card.wide {
+  grid-column: span 2;
+}
+
+/* Progress bars */
+.progress-bar {
+  background: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 18px;
+  margin: 0.5rem 0;
+}
+.progress-bar div {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  width: 0%;
+  transition: width 0.4s ease-in-out;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+table thead {
+  background: #f0f0f0;
+}
+table th, table td {
+  padding: 0.4rem;
+  border: 1px solid #ddd;
+  text-align: left;
 }

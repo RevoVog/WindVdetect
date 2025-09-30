@@ -94,3 +94,5 @@ async def websocket_endpoint(websocket: WebSocket):
         # catch other exceptions and disconnect
         print("WebSocket error:", e)
         manager.disconnect(websocket, role)
+
+

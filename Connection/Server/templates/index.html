@@ -1,84 +1,230 @@
-<!-- templates/index.html -->
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8" />
   <title>Realtime System Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css" />
   <style>
-    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 12px; background:#f6f8fb; color:#111; }
-    .card { background:white; border-radius:10px; padding:12px; margin-bottom:10px; box-shadow:0 2px 6px rgba(10,10,10,0.06); }
-    pre { white-space: pre-wrap; word-wrap: break-word; font-size:13px; }
-    #status { margin-bottom:8px; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:10px; }
-    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f8fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #222;
+      color: #fff;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      background: #eee;
+    }
+
+    /* Grid layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card.wide {
+      grid-column: span 2;
+    }
+
+    /* Progress bars */
+    .progress-bar {
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+      height: 18px;
+      margin: 0.5rem 0;
+    }
+
+    .progress-bar div {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      width: 0%;
+      transition: width 0.4s ease-in-out;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    table thead {
+      background: #f0f0f0;
+    }
+
+    table th,
+    table td {
+      padding: 0.4rem;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
   </style>
 </head>
+
 <body>
   <header>
-    <h2>Realtime System Dashboard</h2>
+    <h2>⚡ Realtime System Dashboard</h2>
     <div id="status">Connecting...</div>
   </header>
 
-  <div class="grid">
+  <main class="grid">
+    <!-- CPU -->
     <div class="card">
-      <h3>Latest Raw Snapshot</h3>
-      <pre id="raw">No data yet</pre>
+      <h3>CPU Usage</h3>
+      <div class="progress-bar">
+        <div id="cpu-bar"></div>
+      </div>
+      <p><span id="cpu-val">--</span>%</p>
     </div>
 
+    <!-- Memory -->
     <div class="card">
-      <h3>Summary</h3>
-      <div id="summary">Waiting for data...</div>
+      <h3>Memory Usage</h3>
+      <div class="progress-bar">
+        <div id="mem-bar"></div>
+      </div>
+      <p><span id="mem-val">--</span>%</p>
     </div>
-  </div>
+
+    <!-- Swap -->
+    <div class="card">
+      <h3>Swap Usage</h3>
+      <div class="progress-bar">
+        <div id="swap-bar"></div>
+      </div>
+      <p><span id="swap-val">--</span>%</p>
+    </div>
+
+    <!-- Disk -->
+    <div class="card">
+      <h3>Disk Usage</h3>
+      <div class="progress-bar">
+        <div id="disk-bar"></div>
+      </div>
+      <p><span id="disk-val">--</span>%</p>
+    </div>
+
+    <!-- Network -->
+    <div class="card wide">
+      <h3>Network</h3>
+      <p>Sent: <span id="net-sent">--</span> MB</p>
+      <p>Received: <span id="net-recv">--</span> MB</p>
+    </div>
+
+    <!-- Top Processes -->
+    <div class="card wide">
+      <h3>Top CPU Processes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>PID</th>
+            <th>Name</th>
+            <th>User</th>
+            <th>CPU %</th>
+            <th>Mem %</th>
+          </tr>
+        </thead>
+        <tbody id="proc-table"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer>
+    <small>Last updated: <span id="timestamp">--</span></small>
+  </footer>
 
   <script>
     const statusEl = document.getElementById('status');
-    const rawEl = document.getElementById('raw');
-    const summaryEl = document.getElementById('summary');
+    const cpuBar = document.getElementById('cpu-bar');
+    const memBar = document.getElementById('mem-bar');
+    const swapBar = document.getElementById('swap-bar');
+    const diskBar = document.getElementById('disk-bar');
 
-    // adjust host if using different host/port
+    const cpuVal = document.getElementById('cpu-val');
+    const memVal = document.getElementById('mem-val');
+    const swapVal = document.getElementById('swap-val');
+    const diskVal = document.getElementById('disk-val');
+
+    const netSent = document.getElementById('net-sent');
+    const netRecv = document.getElementById('net-recv');
+    const procTable = document.getElementById('proc-table');
+    const timestamp = document.getElementById('timestamp');
+
     const protocol = (location.protocol === "https:") ? "wss" : "ws";
     const wsUrl = `${protocol}://${location.host}/ws?role=dashboard`;
     const ws = new WebSocket(wsUrl);
 
-    ws.onopen = () => {
-      statusEl.textContent = "Connected to server";
-      console.log("WS open");
-    };
-
-    ws.onclose = () => {
-      statusEl.textContent = "Disconnected";
-      console.log("WS close");
-    };
-
-    ws.onerror = (e) => {
-      statusEl.textContent = "WebSocket error";
-      console.error(e);
-    };
+    ws.onopen = () => { statusEl.textContent = "✅ Connected"; };
+    ws.onclose = () => { statusEl.textContent = "❌ Disconnected"; };
+    ws.onerror = () => { statusEl.textContent = "⚠️ WebSocket error"; };
 
     ws.onmessage = (evt) => {
       try {
         const data = JSON.parse(evt.data);
-        rawEl.textContent = JSON.stringify(data, null, 2);
 
-        // build a compact human summary (safe: guard existence)
-        const lines = [];
-        if (data['Timestamp']) lines.push(`Time: ${data['Timestamp']}`);
-        if (data['CPU Usage (%)'] !== undefined) lines.push(`CPU: ${data['CPU Usage (%)']}%`);
-        if (data['Virtual Memory'] && data['Virtual Memory'].percent !== undefined) {
-          lines.push(`RAM: ${data['Virtual Memory'].percent}% (${Math.round((data['Virtual Memory'].used || 0)/1024/1024)} MB used)`);
-        }
-        if (data['Network IO Counters'] && data['Network IO Counters'].bytes_sent !== undefined) {
-          lines.push(`Net: sent ${data['Network IO Counters'].bytes_sent} rx ${data['Network IO Counters'].bytes_recv}`);
-        }
-        if (data['Battery']) lines.push(`Battery: ${data['Battery']}`);
+        // CPU
+        cpuVal.textContent = data.CPU.cpu_percent.toFixed(1);
+        cpuBar.style.width = data.CPU.cpu_percent + "%";
 
-        summaryEl.innerHTML = lines.join('<br/>');
+        // Memory
+        memVal.textContent = data["Virtual Memory"].percent;
+        memBar.style.width = data["Virtual Memory"].percent + "%";
+
+        // Swap
+        swapVal.textContent = data["Swap Memory"].percent;
+        swapBar.style.width = data["Swap Memory"].percent + "%";
+
+        // Disk
+        const disk = data["Disk Partitions"][0].usage.percent;
+        diskVal.textContent = disk;
+        diskBar.style.width = disk + "%";
+
+        // Network
+        netSent.textContent = (data["Network IO Counters"].bytes_sent / 1048576).toFixed(2);
+        netRecv.textContent = (data["Network IO Counters"].bytes_recv / 1048576).toFixed(2);
+
+        // Top processes
+        procTable.innerHTML = "";
+        data["Top CPU Processes"].slice(0, 5).forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${p.pid}</td><td>${p.name}</td><td>${p.username}</td><td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td>`;
+          procTable.appendChild(tr);
+        });
+
+        // Timestamp
+        timestamp.textContent = data.Timestamp;
+
       } catch (err) {
-        rawEl.textContent = evt.data;
+        console.error("Parse error", err);
       }
     };
   </script>
 </body>
+
 </html>
