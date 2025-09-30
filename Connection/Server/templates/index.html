@@ -1,92 +1,11 @@
 <!doctype html>
 <html>
-
 <head>
   <meta charset="utf-8" />
   <title>Realtime System Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="/static/style.css" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f6f8fa;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background: #222;
-      color: #fff;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    footer {
-      text-align: center;
-      padding: 0.5rem;
-      font-size: 0.8rem;
-      background: #eee;
-    }
-
-    /* Grid layout */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      padding: 1rem;
-    }
-
-    /* Cards */
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .card.wide {
-      grid-column: span 2;
-    }
-
-    /* Progress bars */
-    .progress-bar {
-      background: #eee;
-      border-radius: 6px;
-      overflow: hidden;
-      height: 18px;
-      margin: 0.5rem 0;
-    }
-
-    .progress-bar div {
-      height: 100%;
-      background: linear-gradient(90deg, #4caf50, #8bc34a);
-      width: 0%;
-      transition: width 0.4s ease-in-out;
-    }
-
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-    }
-
-    table thead {
-      background: #f0f0f0;
-    }
-
-    table th,
-    table td {
-      padding: 0.4rem;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-  </style>
 </head>
-
 <body>
   <header>
     <h2>⚡ Realtime System Dashboard</h2>
@@ -94,86 +13,126 @@
   </header>
 
   <main class="grid">
+    <!-- System Info -->
+    <div class="card wide">
+      <h3>System Info</h3>
+      <pre id="host-info">--</pre>
+    </div>
+
     <!-- CPU -->
     <div class="card">
       <h3>CPU Usage</h3>
-      <div class="progress-bar">
-        <div id="cpu-bar"></div>
-      </div>
+      <div class="progress-bar"><div id="cpu-bar"></div></div>
       <p><span id="cpu-val">--</span>%</p>
+      <pre id="cpu-stats">--</pre>
     </div>
 
     <!-- Memory -->
     <div class="card">
       <h3>Memory Usage</h3>
-      <div class="progress-bar">
-        <div id="mem-bar"></div>
-      </div>
+      <div class="progress-bar"><div id="mem-bar"></div></div>
       <p><span id="mem-val">--</span>%</p>
+      <pre id="mem-stats">--</pre>
     </div>
 
     <!-- Swap -->
     <div class="card">
       <h3>Swap Usage</h3>
-      <div class="progress-bar">
-        <div id="swap-bar"></div>
-      </div>
+      <div class="progress-bar"><div id="swap-bar"></div></div>
       <p><span id="swap-val">--</span>%</p>
+      <pre id="swap-stats">--</pre>
     </div>
 
     <!-- Disk -->
-    <div class="card">
-      <h3>Disk Usage</h3>
-      <div class="progress-bar">
-        <div id="disk-bar"></div>
-      </div>
-      <p><span id="disk-val">--</span>%</p>
+    <div class="card wide">
+      <h3>Disk Partitions</h3>
+      <table>
+        <thead>
+          <tr><th>Device</th><th>Mount</th><th>FS</th><th>Used %</th></tr>
+        </thead>
+        <tbody id="disk-table"></tbody>
+      </table>
+      <h4>Disk IO Counters</h4>
+      <pre id="disk-io">--</pre>
     </div>
 
     <!-- Network -->
     <div class="card wide">
-      <h3>Network</h3>
-      <p>Sent: <span id="net-sent">--</span> MB</p>
-      <p>Received: <span id="net-recv">--</span> MB</p>
+      <h3>Network Interfaces</h3>
+      <pre id="net-interfaces">--</pre>
+
+      <h4>Network Stats</h4>
+      <pre id="net-stats">--</pre>
+
+      <h4>Network IO Counters</h4>
+      <p>Sent: <span id="net-sent">--</span> KB | Recv: <span id="net-recv">--</span> KB</p>
     </div>
 
-    <!-- Top Processes -->
+    <!-- Battery -->
+    <div class="card">
+      <h3>Battery</h3>
+      <pre id="battery">--</pre>
+    </div>
+
+    <!-- Processes -->
     <div class="card wide">
       <h3>Top CPU Processes</h3>
       <table>
         <thead>
-          <tr>
-            <th>PID</th>
-            <th>Name</th>
-            <th>User</th>
-            <th>CPU %</th>
-            <th>Mem %</th>
-          </tr>
+          <tr><th>PID</th><th>Name</th><th>User</th><th>CPU %</th><th>Mem %</th></tr>
         </thead>
-        <tbody id="proc-table"></tbody>
+        <tbody id="proc-cpu"></tbody>
+      </table>
+
+      <h3>Top Memory Processes</h3>
+      <table>
+        <thead>
+          <tr><th>PID</th><th>Name</th><th>User</th><th>CPU %</th><th>Mem %</th></tr>
+        </thead>
+        <tbody id="proc-mem"></tbody>
       </table>
     </div>
   </main>
 
   <footer>
-    <small>Last updated: <span id="timestamp">--</span></small>
+    <small>
+      Boot Time: <span id="boot-time">--</span> | 
+      Users: <span id="users">--</span> | 
+      Last updated: <span id="timestamp">--</span>
+    </small>
   </footer>
 
   <script>
     const statusEl = document.getElementById('status');
+
     const cpuBar = document.getElementById('cpu-bar');
     const memBar = document.getElementById('mem-bar');
     const swapBar = document.getElementById('swap-bar');
-    const diskBar = document.getElementById('disk-bar');
 
     const cpuVal = document.getElementById('cpu-val');
     const memVal = document.getElementById('mem-val');
     const swapVal = document.getElementById('swap-val');
-    const diskVal = document.getElementById('disk-val');
 
+    const hostInfo = document.getElementById('host-info');
+    const cpuStats = document.getElementById('cpu-stats');
+    const memStats = document.getElementById('mem-stats');
+    const swapStats = document.getElementById('swap-stats');
+
+    const diskTable = document.getElementById('disk-table');
+    const diskIO = document.getElementById('disk-io');
+
+    const netInterfaces = document.getElementById('net-interfaces');
+    const netStats = document.getElementById('net-stats');
     const netSent = document.getElementById('net-sent');
     const netRecv = document.getElementById('net-recv');
-    const procTable = document.getElementById('proc-table');
+
+    const battery = document.getElementById('battery');
+
+    const procCPU = document.getElementById('proc-cpu');
+    const procMem = document.getElementById('proc-mem');
+
+    const bootTime = document.getElementById('boot-time');
+    const users = document.getElementById('users');
     const timestamp = document.getElementById('timestamp');
 
     const protocol = (location.protocol === "https:") ? "wss" : "ws";
@@ -188,36 +147,60 @@
       try {
         const data = JSON.parse(evt.data);
 
+        // Host info
+        hostInfo.textContent = JSON.stringify(data.Host, null, 2);
+
         // CPU
         cpuVal.textContent = data.CPU.cpu_percent.toFixed(1);
         cpuBar.style.width = data.CPU.cpu_percent + "%";
+        cpuStats.textContent = JSON.stringify({times: data.CPU.cpu_times, stats: data.CPU.cpu_stats}, null, 2);
 
         // Memory
         memVal.textContent = data["Virtual Memory"].percent;
         memBar.style.width = data["Virtual Memory"].percent + "%";
+        memStats.textContent = JSON.stringify(data["Virtual Memory"], null, 2);
 
         // Swap
         swapVal.textContent = data["Swap Memory"].percent;
         swapBar.style.width = data["Swap Memory"].percent + "%";
+        swapStats.textContent = JSON.stringify(data["Swap Memory"], null, 2);
 
-        // Disk
-        const disk = data["Disk Partitions"][0].usage.percent;
-        diskVal.textContent = disk;
-        diskBar.style.width = disk + "%";
+        // Disks
+        diskTable.innerHTML = "";
+        data["Disk Partitions"].forEach(d => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${d.device}</td><td>${d.mountpoint}</td><td>${d.fstype}</td><td>${d.usage.percent}%</td>`;
+          diskTable.appendChild(tr);
+        });
+        diskIO.textContent = JSON.stringify(data["Disk IO Counters"], null, 2);
 
         // Network
-        netSent.textContent = (data["Network IO Counters"].bytes_sent / 1048576).toFixed(2);
-        netRecv.textContent = (data["Network IO Counters"].bytes_recv / 1048576).toFixed(2);
+        netInterfaces.textContent = JSON.stringify(data["Network Interfaces"], null, 2);
+        netStats.textContent = JSON.stringify(data["Network Stats"], null, 2);
+        netSent.textContent = (data["Network IO Counters"].bytes_sent / 1024).toFixed(2);
+        netRecv.textContent = (data["Network IO Counters"].bytes_recv / 1024).toFixed(2);
 
-        // Top processes
-        procTable.innerHTML = "";
-        data["Top CPU Processes"].slice(0, 5).forEach(p => {
+        // Battery
+        battery.textContent = JSON.stringify(data.Battery, null, 2);
+
+        // Processes
+        procCPU.innerHTML = "";
+        data["Top CPU Processes"].forEach(p => {
           const tr = document.createElement("tr");
           tr.innerHTML = `<td>${p.pid}</td><td>${p.name}</td><td>${p.username}</td><td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td>`;
-          procTable.appendChild(tr);
+          procCPU.appendChild(tr);
         });
 
-        // Timestamp
+        procMem.innerHTML = "";
+        data["Top Memory Processes"].forEach(p => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${p.pid}</td><td>${p.name}</td><td>${p.username}</td><td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td>`;
+          procMem.appendChild(tr);
+        });
+
+        // Footer info
+        bootTime.textContent = data["Boot Time"];
+        users.textContent = JSON.stringify(data.Users);
         timestamp.textContent = data.Timestamp;
 
       } catch (err) {
@@ -226,5 +209,4 @@
     };
   </script>
 </body>
-
 </html>
