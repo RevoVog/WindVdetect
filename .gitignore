@@ -1,1 +1,2 @@
-/Connection/Server/TESTING/venv
+*venv
+*__pycache__

@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Network Traffic</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans flex flex-col h-screen">
+  <header class="bg-gray-900 p-4 flex justify-between items-center">
+    <h2 class="text-xl font-bold">Network Traffic (KB/s)</h2>
+    <button onclick="location.href='index.html'" 
+            class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-sm">← Back</button>
+  </header>
+  <main class="flex-1">
+    <canvas id="netChart" class="w-full h-full"></canvas>
+  </main>
+
+  <script>
+    const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?role=dashboard`;
+    const ws = new WebSocket(wsUrl);
+
+    const netChart = new Chart(document.getElementById("netChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Sent KB/s", data: [], borderColor: "#f59e0b", backgroundColor: "#f59e0b33", tension: 0.3 },
+          { label: "Recv KB/s", data: [], borderColor: "#ef4444", backgroundColor: "#ef444433", tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } },
+        plugins: { legend: { labels: { color: "#ccc" } } }
+      }
+    });
+
+    let lastNet = null;
+
+    ws.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      const ts = new Date().toLocaleTimeString();
+      if (lastNet) {
+        const sentDiff = (data["Network IO Counters"].bytes_sent - lastNet.bytes_sent) / 1024;
+        const recvDiff = (data["Network IO Counters"].bytes_recv - lastNet.bytes_recv) / 1024;
+
+        netChart.data.labels.push(ts);
+        netChart.data.datasets[0].data.push(sentDiff.toFixed(2));
+        netChart.data.datasets[1].data.push(recvDiff.toFixed(2));
+
+        if (netChart.data.labels.length > 50) {
+          netChart.data.labels.shift();
+          netChart.data.datasets[0].data.shift();
+          netChart.data.datasets[1].data.shift();
+        }
+        netChart.update();
+      }
+      lastNet = data["Network IO Counters"];
+    };
+  </script>
+</body>
+</html>
