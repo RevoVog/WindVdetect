@@ -1,0 +1,8 @@
+fastapi==0.95.2
+uvicorn[standard]==0.22.0
+jinja2==3.1.2
+psutil==5.9.5
+websockets==11.0.3         
+python-multipart==0.0.6
+
+# pip3 install -r requirments.txt   
