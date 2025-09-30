@@ -1,4 +1,6 @@
 # server.py
+# uvicorn Server:app --host 0.0.0.0 --port 8000 --reload
+
 import asyncio
 import json
 from typing import List
