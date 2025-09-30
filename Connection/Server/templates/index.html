@@ -5,6 +5,7 @@
   <title>Realtime System Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans">
   <!-- Header -->
@@ -22,37 +23,25 @@
       <ul class="text-sm space-y-1" id="host-info"></ul>
     </div>
 
-    <!-- CPU -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow">
-      <h3 class="text-lg font-semibold mb-2">CPU</h3>
-      <div class="w-full bg-gray-700 rounded h-3 overflow-hidden">
-        <div id="cpu-bar" class="h-3 bg-green-500"></div>
-      </div>
-      <p class="mt-1 text-sm">Usage: <span id="cpu-val">--</span>%</p>
-      <ul class="mt-2 text-xs space-y-1" id="cpu-extra"></ul>
+    <!-- CPU with Chart -->
+    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1">
+      <h3 class="text-lg font-semibold mb-2">CPU Usage</h3>
+      <canvas id="cpuChart" height="120"></canvas>
     </div>
 
-    <!-- Memory -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow">
-      <h3 class="text-lg font-semibold mb-2">Memory</h3>
-      <div class="w-full bg-gray-700 rounded h-3 overflow-hidden">
-        <div id="mem-bar" class="h-3 bg-blue-500"></div>
-      </div>
-      <p class="mt-1 text-sm">Usage: <span id="mem-val">--</span>%</p>
-      <ul class="mt-2 text-xs space-y-1" id="mem-extra"></ul>
+    <!-- Memory with Chart -->
+    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1">
+      <h3 class="text-lg font-semibold mb-2">Memory Usage</h3>
+      <canvas id="memChart" height="120"></canvas>
     </div>
 
-    <!-- Swap -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow">
-      <h3 class="text-lg font-semibold mb-2">Swap</h3>
-      <div class="w-full bg-gray-700 rounded h-3 overflow-hidden">
-        <div id="swap-bar" class="h-3 bg-purple-500"></div>
-      </div>
-      <p class="mt-1 text-sm">Usage: <span id="swap-val">--</span>%</p>
-      <ul class="mt-2 text-xs space-y-1" id="swap-extra"></ul>
+    <!-- Network with Chart -->
+    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-2">
+      <h3 class="text-lg font-semibold mb-2">Network Traffic (KB/s)</h3>
+      <canvas id="netChart" height="120"></canvas>
     </div>
 
-    <!-- Disk -->
+    <!-- Disks -->
     <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-2">
       <h3 class="text-lg font-semibold mb-2">Disks</h3>
       <table class="w-full text-xs border border-gray-700 rounded">
@@ -62,22 +51,6 @@
         <tbody id="disk-table"></tbody>
       </table>
       <p class="mt-3 text-sm text-gray-400">IO: <span id="disk-io"></span></p>
-    </div>
-
-    <!-- Network -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-2">
-      <h3 class="text-lg font-semibold mb-2">Network</h3>
-      <p class="text-sm">Sent: <span id="net-sent">--</span> KB | Recv: <span id="net-recv">--</span> KB</p>
-      <div class="grid grid-cols-2 gap-4 mt-3">
-        <div>
-          <h4 class="font-semibold text-sm mb-1">Interfaces</h4>
-          <ul id="net-interfaces" class="text-xs space-y-1"></ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-sm mb-1">Stats</h4>
-          <ul id="net-stats" class="text-xs space-y-1"></ul>
-        </div>
-      </div>
     </div>
 
     <!-- Battery -->
@@ -120,28 +93,9 @@
   </footer>
 
   <script>
-    const cpuBar = document.getElementById('cpu-bar');
-    const memBar = document.getElementById('mem-bar');
-    const swapBar = document.getElementById('swap-bar');
-
-    const hostInfo = document.getElementById('host-info');
-    const cpuExtra = document.getElementById('cpu-extra');
-    const memExtra = document.getElementById('mem-extra');
-    const swapExtra = document.getElementById('swap-extra');
-    const diskTable = document.getElementById('disk-table');
-    const diskIO = document.getElementById('disk-io');
-    const netInterfaces = document.getElementById('net-interfaces');
-    const netStats = document.getElementById('net-stats');
-    const netSent = document.getElementById('net-sent');
-    const netRecv = document.getElementById('net-recv');
-    const battery = document.getElementById('battery');
-    const procCPU = document.getElementById('proc-cpu');
-    const procMem = document.getElementById('proc-mem');
-    const bootTime = document.getElementById('boot-time');
-    const users = document.getElementById('users');
-    const timestamp = document.getElementById('timestamp');
     const statusEl = document.getElementById('status');
 
+    // WebSocket setup
     const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?role=dashboard`;
     const ws = new WebSocket(wsUrl);
 
@@ -149,64 +103,116 @@
     ws.onclose = () => statusEl.textContent = "❌ Disconnected";
     ws.onerror = () => statusEl.textContent = "⚠️ Error";
 
+    // Chart.js setup
+    const chartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true }
+      },
+      plugins: { legend: { labels: { color: "#ccc" } } }
+    };
+
+    const cpuChart = new Chart(document.getElementById("cpuChart"), {
+      type: "line",
+      data: { labels: [], datasets: [{ label: "CPU %", data: [], borderColor: "#22c55e", backgroundColor: "#22c55e33", tension: 0.3 }] },
+      options: chartOptions
+    });
+
+    const memChart = new Chart(document.getElementById("memChart"), {
+      type: "line",
+      data: { labels: [], datasets: [{ label: "Memory %", data: [], borderColor: "#3b82f6", backgroundColor: "#3b82f633", tension: 0.3 }] },
+      options: chartOptions
+    });
+
+    const netChart = new Chart(document.getElementById("netChart"), {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Sent KB/s", data: [], borderColor: "#f59e0b", backgroundColor: "#f59e0b33", tension: 0.3 },
+          { label: "Recv KB/s", data: [], borderColor: "#ef4444", backgroundColor: "#ef444433", tension: 0.3 }
+        ]
+      },
+      options: chartOptions
+    });
+
+    let lastNet = null;
+
+    // Handle WebSocket messages
     ws.onmessage = (evt) => {
       try {
         const data = JSON.parse(evt.data);
+        const ts = new Date().toLocaleTimeString();
 
-        // Host
-        hostInfo.innerHTML = `
+        // ---- Charts ----
+        // CPU
+        cpuChart.data.labels.push(ts);
+        cpuChart.data.datasets[0].data.push(data.CPU.cpu_percent);
+        if (cpuChart.data.labels.length > 20) {
+          cpuChart.data.labels.shift();
+          cpuChart.data.datasets[0].data.shift();
+        }
+        cpuChart.update();
+
+        // Memory
+        memChart.data.labels.push(ts);
+        memChart.data.datasets[0].data.push(data["Virtual Memory"].percent);
+        if (memChart.data.labels.length > 20) {
+          memChart.data.labels.shift();
+          memChart.data.datasets[0].data.shift();
+        }
+        memChart.update();
+
+        // Network (calculate KB/s from counters)
+        if (lastNet) {
+          const sentDiff = (data["Network IO Counters"].bytes_sent - lastNet.bytes_sent) / 1024;
+          const recvDiff = (data["Network IO Counters"].bytes_recv - lastNet.bytes_recv) / 1024;
+
+          netChart.data.labels.push(ts);
+          netChart.data.datasets[0].data.push(sentDiff.toFixed(2));
+          netChart.data.datasets[1].data.push(recvDiff.toFixed(2));
+
+          if (netChart.data.labels.length > 20) {
+            netChart.data.labels.shift();
+            netChart.data.datasets[0].data.shift();
+            netChart.data.datasets[1].data.shift();
+          }
+          netChart.update();
+        }
+        lastNet = data["Network IO Counters"];
+
+        // ---- Other UI Updates (simplified for brevity) ----
+        document.getElementById("timestamp").textContent = data.Timestamp;
+        document.getElementById("boot-time").textContent = data["Boot Time"];
+        document.getElementById("users").textContent = data.Users.length ? JSON.stringify(data.Users) : "None";
+
+        // Host info
+        document.getElementById("host-info").innerHTML = `
           <li>System: ${data.Host.system}</li>
           <li>Platform: ${data.Host.platform}</li>
           <li>Release: ${data.Host.release}</li>
-          <li>Python: ${data.Host.python_version}</li>
           <li>Hostname: ${data.Host.hostname}</li>
         `;
 
-        // CPU
-        cpuBar.style.width = data.CPU.cpu_percent + "%";
-        document.getElementById('cpu-val').textContent = data.CPU.cpu_percent.toFixed(1);
-        cpuExtra.innerHTML = `<li>Logical: ${data.CPU.cpu_count_logical}, Physical: ${data.CPU.cpu_count_physical}</li>`;
-
-        // Memory
-        memBar.style.width = data["Virtual Memory"].percent + "%";
-        document.getElementById('mem-val').textContent = data["Virtual Memory"].percent;
-        memExtra.innerHTML = `<li>Total: ${(data["Virtual Memory"].total/1e9).toFixed(1)} GB</li>
-                              <li>Available: ${(data["Virtual Memory"].available/1e9).toFixed(1)} GB</li>`;
-
-        // Swap
-        swapBar.style.width = data["Swap Memory"].percent + "%";
-        document.getElementById('swap-val').textContent = data["Swap Memory"].percent;
-        swapExtra.innerHTML = `<li>Total: ${(data["Swap Memory"].total/1e9).toFixed(1)} GB</li>
-                               <li>Used: ${(data["Swap Memory"].used/1e9).toFixed(1)} GB</li>`;
-
-        // Disk
+        // Disks
+        const diskTable = document.getElementById("disk-table");
         diskTable.innerHTML = "";
         data["Disk Partitions"].forEach(d => {
           diskTable.innerHTML += `<tr class="border-t border-gray-700">
             <td class="p-1">${d.device}</td><td>${d.mountpoint}</td><td>${d.fstype}</td><td>${d.usage.percent}%</td>
           </tr>`;
         });
-        diskIO.textContent = `Reads: ${data["Disk IO Counters"].read_count}, Writes: ${data["Disk IO Counters"].write_count}`;
-
-        // Network
-        netSent.textContent = (data["Network IO Counters"].bytes_sent/1024).toFixed(2);
-        netRecv.textContent = (data["Network IO Counters"].bytes_recv/1024).toFixed(2);
-
-        netInterfaces.innerHTML = "";
-        for (const [iface, addrs] of Object.entries(data["Network Interfaces"])) {
-          netInterfaces.innerHTML += `<li>${iface}: ${addrs.map(a=>a.address).join(", ")}</li>`;
-        }
-
-        netStats.innerHTML = "";
-        for (const [iface, st] of Object.entries(data["Network Stats"])) {
-          netStats.innerHTML += `<li>${iface}: up=${st.isup}, speed=${st.speed}Mb</li>`;
-        }
+        document.getElementById("disk-io").textContent =
+          `Reads: ${data["Disk IO Counters"].read_count}, Writes: ${data["Disk IO Counters"].write_count}`;
 
         // Battery
-        battery.innerHTML = `<li>Percent: ${data.Battery.percent}%</li>
-                             <li>Plugged: ${data.Battery.power_plugged}</li>`;
+        document.getElementById("battery").innerHTML =
+          `<li>Percent: ${data.Battery.percent}%</li>
+           <li>Plugged: ${data.Battery.power_plugged}</li>`;
 
         // Processes
+        const procCPU = document.getElementById("proc-cpu");
         procCPU.innerHTML = "";
         data["Top CPU Processes"].forEach(p => {
           procCPU.innerHTML += `<tr class="border-t border-gray-700">
@@ -214,6 +220,7 @@
             <td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td></tr>`;
         });
 
+        const procMem = document.getElementById("proc-mem");
         procMem.innerHTML = "";
         data["Top Memory Processes"].forEach(p => {
           procMem.innerHTML += `<tr class="border-t border-gray-700">
@@ -221,13 +228,10 @@
             <td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td></tr>`;
         });
 
-        // Footer
-        bootTime.textContent = data["Boot Time"];
-        users.textContent = data.Users.length ? JSON.stringify(data.Users) : "None";
-        timestamp.textContent = data.Timestamp;
-
-      } catch(e) { console.error(e); }
-    }
+      } catch (e) {
+        console.error("Update failed:", e);
+      }
+    };
   </script>
 </body>
 </html>
