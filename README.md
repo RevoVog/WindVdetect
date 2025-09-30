@@ -1,6 +1,6 @@
 # WindVdetect
-Offensive side EDR (Endpoint Detection and Response) tools for windows 
-
+Offensive side EDR (Endpoint Detection and Response) tools for windows / Linux, Shows System info in a nice Dashboard in a LAN (for now)
+---
 
 ### Data Collection
 
@@ -10,4 +10,16 @@ Offensive side EDR (Endpoint Detection and Response) tools for windows
 * User Activity: Actions performed by users, such as login attempts, file access, and privilege changes.
 * System Events: Records from the operating system event logs.
 
+---
+
 ### Sending / Analysing
+
+---
+---
+
+### Dashboard : Mobile view
+---
+
+<img src="DB.jpg" width="550" alt="Mobile view Dashboard" />
+
+---
