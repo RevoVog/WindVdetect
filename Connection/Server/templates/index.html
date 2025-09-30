@@ -1,14 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
+<!-- templates/index.html -->
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="/static/style.css" />
-    <title>FAST API</title>
+  <meta charset="utf-8" />
+  <title>Realtime System Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 12px; background:#f6f8fb; color:#111; }
+    .card { background:white; border-radius:10px; padding:12px; margin-bottom:10px; box-shadow:0 2px 6px rgba(10,10,10,0.06); }
+    pre { white-space: pre-wrap; word-wrap: break-word; font-size:13px; }
+    #status { margin-bottom:8px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:10px; }
+    header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>FAST API</h1>
-        <p>Welcome to the FAST API landing page.</p>
+  <header>
+    <h2>Realtime System Dashboard</h2>
+    <div id="status">Connecting...</div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Latest Raw Snapshot</h3>
+      <pre id="raw">No data yet</pre>
     </div>
+
+    <div class="card">
+      <h3>Summary</h3>
+      <div id="summary">Waiting for data...</div>
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const rawEl = document.getElementById('raw');
+    const summaryEl = document.getElementById('summary');
+
+    // adjust host if using different host/port
+    const protocol = (location.protocol === "https:") ? "wss" : "ws";
+    const wsUrl = `${protocol}://${location.host}/ws?role=dashboard`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      statusEl.textContent = "Connected to server";
+      console.log("WS open");
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = "Disconnected";
+      console.log("WS close");
+    };
+
+    ws.onerror = (e) => {
+      statusEl.textContent = "WebSocket error";
+      console.error(e);
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data);
+        rawEl.textContent = JSON.stringify(data, null, 2);
+
+        // build a compact human summary (safe: guard existence)
+        const lines = [];
+        if (data['Timestamp']) lines.push(`Time: ${data['Timestamp']}`);
+        if (data['CPU Usage (%)'] !== undefined) lines.push(`CPU: ${data['CPU Usage (%)']}%`);
+        if (data['Virtual Memory'] && data['Virtual Memory'].percent !== undefined) {
+          lines.push(`RAM: ${data['Virtual Memory'].percent}% (${Math.round((data['Virtual Memory'].used || 0)/1024/1024)} MB used)`);
+        }
+        if (data['Network IO Counters'] && data['Network IO Counters'].bytes_sent !== undefined) {
+          lines.push(`Net: sent ${data['Network IO Counters'].bytes_sent} rx ${data['Network IO Counters'].bytes_recv}`);
+        }
+        if (data['Battery']) lines.push(`Battery: ${data['Battery']}`);
+
+        summaryEl.innerHTML = lines.join('<br/>');
+      } catch (err) {
+        rawEl.textContent = evt.data;
+      }
+    };
+  </script>
 </body>
-</html></div>
+</html>
