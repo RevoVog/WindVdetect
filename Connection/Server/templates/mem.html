@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Memory Usage</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans flex flex-col h-screen">
+  <header class="bg-gray-900 p-4 flex justify-between items-center">
+    <h2 class="text-xl font-bold">Memory Usage</h2>
+    <button onclick="location.href='index.html'" 
+            class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-sm">← Back</button>
+  </header>
+  <main class="flex-1">
+    <canvas id="memChart" class="w-full h-full"></canvas>
+  </main>
+
+  <script>
+    const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?role=dashboard`;
+    const ws = new WebSocket(wsUrl);
+
+    const memChart = new Chart(document.getElementById("memChart"), {
+      type: "line",
+      data: { labels: [], datasets: [{ label: "Memory %", data: [], borderColor: "#3b82f6", backgroundColor: "#3b82f633", tension: 0.3 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 100 } },
+        plugins: { legend: { labels: { color: "#ccc" } } }
+      }
+    });
+
+    ws.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      const ts = new Date().toLocaleTimeString();
+      memChart.data.labels.push(ts);
+      memChart.data.datasets[0].data.push(data["Virtual Memory"].percent);
+      if (memChart.data.labels.length > 50) {
+        memChart.data.labels.shift();
+        memChart.data.datasets[0].data.shift();
+      }
+      memChart.update();
+    };
+  </script>
+</body>
+</html>
