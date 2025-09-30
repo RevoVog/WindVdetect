@@ -59,10 +59,22 @@ manager = ConnectionManager()
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    """
-    Serves the dashboard HTML page.
-    """
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/cpu", response_class=HTMLResponse)
+async def cpu_page(request: Request):
+    return templates.TemplateResponse("cpu.html", {"request": request})
+
+@app.get("/mem", response_class=HTMLResponse)
+async def mem_page(request: Request):
+    return templates.TemplateResponse("mem.html", {"request": request})
+
+@app.get("/net", response_class=HTMLResponse)
+async def net_page(request: Request):
+    return templates.TemplateResponse("net.html", {"request": request})
+@app.get("/cup", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    return templates.TemplateResponse("cpu.html", {"request": request})
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

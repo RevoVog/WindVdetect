@@ -5,7 +5,6 @@
   <title>Realtime System Dashboard</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans">
   <!-- Header -->
@@ -14,223 +13,113 @@
     <div id="status" class="text-sm text-gray-400">Connecting...</div>
   </header>
 
-  <!-- Main Grid -->
+  <!-- Cards -->
   <main class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
-
-    <!-- System Info -->
+    
+    <!-- CPU -->
     <div class="bg-gray-800 rounded-2xl p-4 shadow">
-      <h3 class="text-lg font-semibold mb-2">System Info</h3>
-      <ul class="text-sm space-y-1" id="host-info"></ul>
-    </div>
-
-    <!-- CPU with Chart -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1">
-      <h3 class="text-lg font-semibold mb-2">CPU Usage</h3>
-      <canvas id="cpuChart" height="120"></canvas>
-    </div>
-
-    <!-- Memory with Chart -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1">
-      <h3 class="text-lg font-semibold mb-2">Memory Usage</h3>
-      <canvas id="memChart" height="120"></canvas>
-    </div>
-
-    <!-- Network with Chart -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-2">
-      <h3 class="text-lg font-semibold mb-2">Network Traffic (KB/s)</h3>
-      <canvas id="netChart" height="120"></canvas>
-    </div>
-
-    <!-- Disks -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-2">
-      <h3 class="text-lg font-semibold mb-2">Disks</h3>
-      <table class="w-full text-xs border border-gray-700 rounded">
-        <thead class="bg-gray-700 text-gray-300">
-          <tr><th class="p-2">Device</th><th>Mount</th><th>FS</th><th>Used %</th></tr>
-        </thead>
-        <tbody id="disk-table"></tbody>
-      </table>
-      <p class="mt-3 text-sm text-gray-400">IO: <span id="disk-io"></span></p>
-    </div>
-
-    <!-- Battery -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow">
-      <h3 class="text-lg font-semibold mb-2">Battery</h3>
-      <ul id="battery" class="text-sm space-y-1"></ul>
-    </div>
-
-    <!-- Processes -->
-    <div class="bg-gray-800 rounded-2xl p-4 shadow col-span-1 xl:col-span-3">
-      <h3 class="text-lg font-semibold mb-2">Processes</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h4 class="text-sm font-semibold mb-1">Top CPU</h4>
-          <table class="w-full text-xs border border-gray-700 rounded">
-            <thead class="bg-gray-700 text-gray-300">
-              <tr><th class="p-2">PID</th><th>Name</th><th>User</th><th>CPU %</th><th>Mem %</th></tr>
-            </thead>
-            <tbody id="proc-cpu"></tbody>
-          </table>
-        </div>
-        <div>
-          <h4 class="text-sm font-semibold mb-1">Top Memory</h4>
-          <table class="w-full text-xs border border-gray-700 rounded">
-            <thead class="bg-gray-700 text-gray-300">
-              <tr><th class="p-2">PID</th><th>Name</th><th>User</th><th>CPU %</th><th>Mem %</th></tr>
-            </thead>
-            <tbody id="proc-mem"></tbody>
-          </table>
-        </div>
+      <h3 class="text-lg font-semibold mb-2">CPU</h3>
+      <div class="w-full bg-gray-700 rounded-full h-3 mb-2">
+        <div id="cpu-bar" class="bg-green-500 h-3 rounded-full" style="width:0%"></div>
       </div>
+      <p><span id="cpu-val">--</span>%</p>
+      <button onclick="location.href='/cpu'"
+              class="mt-2 text-xs bg-green-600 hover:bg-green-700 px-2 py-1 rounded-lg">
+        See More →
+      </button>
+    </div>
+
+    <!-- Memory -->
+    <div class="bg-gray-800 rounded-2xl p-4 shadow">
+      <h3 class="text-lg font-semibold mb-2">Memory</h3>
+      <div class="w-full bg-gray-700 rounded-full h-3 mb-2">
+        <div id="mem-bar" class="bg-blue-500 h-3 rounded-full" style="width:0%"></div>
+      </div>
+      <p><span id="mem-val">--</span>%</p>
+      <button onclick="location.href='/mem'"
+              class="mt-2 text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded-lg">
+        See More →
+      </button>
+    </div>
+
+    <!-- Network -->
+    <div class="bg-gray-800 rounded-2xl p-4 shadow">
+      <h3 class="text-lg font-semibold mb-2">Network</h3>
+      <div class="w-full bg-gray-700 rounded-full h-3 mb-2">
+        <div id="net-bar" class="bg-yellow-500 h-3 rounded-full" style="width:0%"></div>
+      </div>
+      <p>Sent: <span id="net-sent">--</span> KB | Recv: <span id="net-recv">--</span> KB</p>
+      <button onclick="location.href='/net'"
+              class="mt-2 text-xs bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded-lg">
+        See More →
+      </button>
     </div>
   </main>
 
+  <!-- Full System Info -->
+  <section class="p-6">
+    <div class="bg-gray-800 rounded-2xl p-4 shadow">
+      <h3 class="text-lg font-semibold mb-4">📊 System Information</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <p><b>Timestamp:</b> <span id="timestamp">--</span></p>
+        <p><b>Host:</b> <span id="host">--</span></p>
+        <p><b>Swap Memory:</b> <span id="swap">--</span></p>
+        <p><b>Disk Partitions:</b> <span id="disk-part">--</span></p>
+        <p><b>Disk Usage (C:):</b> <span id="disk-usage">--</span></p>
+        <p><b>Disk IO:</b> <span id="disk-io">--</span></p>
+        <p><b>Network Interfaces:</b> <span id="net-if">--</span></p>
+        <p><b>Network Stats:</b> <span id="net-stats">--</span></p>
+        <p><b>Battery:</b> <span id="battery">--</span></p>
+        <p><b>Boot Time:</b> <span id="boot">--</span></p>
+        <p><b>Users:</b> <span id="users">--</span></p>
+        <p><b>Top CPU Processes:</b> <span id="top-cpu">--</span></p>
+        <p><b>Top Memory Processes:</b> <span id="top-mem">--</span></p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="bg-gray-900 text-gray-400 text-xs text-center p-2">
-    Boot Time: <span id="boot-time">--</span> | 
-    Users: <span id="users">--</span> | 
-    Last updated: <span id="timestamp">--</span>
+    FastAPI • WebSocket powered
   </footer>
 
   <script>
-    const statusEl = document.getElementById('status');
-
-    // WebSocket setup
     const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?role=dashboard`;
     const ws = new WebSocket(wsUrl);
+    const statusEl = document.getElementById('status');
 
     ws.onopen = () => statusEl.textContent = "✅ Connected";
     ws.onclose = () => statusEl.textContent = "❌ Disconnected";
     ws.onerror = () => statusEl.textContent = "⚠️ Error";
 
-    // Chart.js setup
-    const chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: { beginAtZero: true }
-      },
-      plugins: { legend: { labels: { color: "#ccc" } } }
-    };
-
-    const cpuChart = new Chart(document.getElementById("cpuChart"), {
-      type: "line",
-      data: { labels: [], datasets: [{ label: "CPU %", data: [], borderColor: "#22c55e", backgroundColor: "#22c55e33", tension: 0.3 }] },
-      options: chartOptions
-    });
-
-    const memChart = new Chart(document.getElementById("memChart"), {
-      type: "line",
-      data: { labels: [], datasets: [{ label: "Memory %", data: [], borderColor: "#3b82f6", backgroundColor: "#3b82f633", tension: 0.3 }] },
-      options: chartOptions
-    });
-
-    const netChart = new Chart(document.getElementById("netChart"), {
-      type: "line",
-      data: {
-        labels: [],
-        datasets: [
-          { label: "Sent KB/s", data: [], borderColor: "#f59e0b", backgroundColor: "#f59e0b33", tension: 0.3 },
-          { label: "Recv KB/s", data: [], borderColor: "#ef4444", backgroundColor: "#ef444433", tension: 0.3 }
-        ]
-      },
-      options: chartOptions
-    });
-
-    let lastNet = null;
-
-    // Handle WebSocket messages
     ws.onmessage = (evt) => {
       try {
         const data = JSON.parse(evt.data);
-        const ts = new Date().toLocaleTimeString();
 
-        // ---- Charts ----
-        // CPU
-        cpuChart.data.labels.push(ts);
-        cpuChart.data.datasets[0].data.push(data.CPU.cpu_percent);
-        if (cpuChart.data.labels.length > 20) {
-          cpuChart.data.labels.shift();
-          cpuChart.data.datasets[0].data.shift();
-        }
-        cpuChart.update();
+        // Progress bars
+        document.getElementById("cpu-bar").style.width = data.CPU.cpu_percent + "%";
+        document.getElementById("cpu-val").textContent = data.CPU.cpu_percent.toFixed(1);
+        document.getElementById("mem-bar").style.width = data["Virtual Memory"].percent + "%";
+        document.getElementById("mem-val").textContent = data["Virtual Memory"].percent;
+        document.getElementById("net-bar").style.width = "100%"; // just a dummy fill
+        document.getElementById("net-sent").textContent = (data["Network IO Counters"].bytes_sent/1024).toFixed(2);
+        document.getElementById("net-recv").textContent = (data["Network IO Counters"].bytes_recv/1024).toFixed(2);
 
-        // Memory
-        memChart.data.labels.push(ts);
-        memChart.data.datasets[0].data.push(data["Virtual Memory"].percent);
-        if (memChart.data.labels.length > 20) {
-          memChart.data.labels.shift();
-          memChart.data.datasets[0].data.shift();
-        }
-        memChart.update();
-
-        // Network (calculate KB/s from counters)
-        if (lastNet) {
-          const sentDiff = (data["Network IO Counters"].bytes_sent - lastNet.bytes_sent) / 1024;
-          const recvDiff = (data["Network IO Counters"].bytes_recv - lastNet.bytes_recv) / 1024;
-
-          netChart.data.labels.push(ts);
-          netChart.data.datasets[0].data.push(sentDiff.toFixed(2));
-          netChart.data.datasets[1].data.push(recvDiff.toFixed(2));
-
-          if (netChart.data.labels.length > 20) {
-            netChart.data.labels.shift();
-            netChart.data.datasets[0].data.shift();
-            netChart.data.datasets[1].data.shift();
-          }
-          netChart.update();
-        }
-        lastNet = data["Network IO Counters"];
-
-        // ---- Other UI Updates (simplified for brevity) ----
+        // System info
         document.getElementById("timestamp").textContent = data.Timestamp;
-        document.getElementById("boot-time").textContent = data["Boot Time"];
-        document.getElementById("users").textContent = data.Users.length ? JSON.stringify(data.Users) : "None";
-
-        // Host info
-        document.getElementById("host-info").innerHTML = `
-          <li>System: ${data.Host.system}</li>
-          <li>Platform: ${data.Host.platform}</li>
-          <li>Release: ${data.Host.release}</li>
-          <li>Hostname: ${data.Host.hostname}</li>
-        `;
-
-        // Disks
-        const diskTable = document.getElementById("disk-table");
-        diskTable.innerHTML = "";
-        data["Disk Partitions"].forEach(d => {
-          diskTable.innerHTML += `<tr class="border-t border-gray-700">
-            <td class="p-1">${d.device}</td><td>${d.mountpoint}</td><td>${d.fstype}</td><td>${d.usage.percent}%</td>
-          </tr>`;
-        });
-        document.getElementById("disk-io").textContent =
-          `Reads: ${data["Disk IO Counters"].read_count}, Writes: ${data["Disk IO Counters"].write_count}`;
-
-        // Battery
-        document.getElementById("battery").innerHTML =
-          `<li>Percent: ${data.Battery.percent}%</li>
-           <li>Plugged: ${data.Battery.power_plugged}</li>`;
-
-        // Processes
-        const procCPU = document.getElementById("proc-cpu");
-        procCPU.innerHTML = "";
-        data["Top CPU Processes"].forEach(p => {
-          procCPU.innerHTML += `<tr class="border-t border-gray-700">
-            <td class="p-1">${p.pid}</td><td>${p.name}</td><td>${p.username}</td>
-            <td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td></tr>`;
-        });
-
-        const procMem = document.getElementById("proc-mem");
-        procMem.innerHTML = "";
-        data["Top Memory Processes"].forEach(p => {
-          procMem.innerHTML += `<tr class="border-t border-gray-700">
-            <td class="p-1">${p.pid}</td><td>${p.name}</td><td>${p.username}</td>
-            <td>${p.cpu_percent}</td><td>${p.memory_percent.toFixed(2)}</td></tr>`;
-        });
-
-      } catch (e) {
-        console.error("Update failed:", e);
-      }
+        document.getElementById("host").textContent = data.Host;
+        document.getElementById("swap").textContent = JSON.stringify(data["Swap Memory"]);
+        document.getElementById("disk-part").textContent = JSON.stringify(data["Disk Partitions"]);
+        document.getElementById("disk-usage").textContent = JSON.stringify(data["Disk Usage (C:)"]);
+        document.getElementById("disk-io").textContent = JSON.stringify(data["Disk IO Counters"]);
+        document.getElementById("net-if").textContent = JSON.stringify(data["Network Interfaces"]);
+        document.getElementById("net-stats").textContent = JSON.stringify(data["Network Stats"]);
+        document.getElementById("battery").textContent = JSON.stringify(data["Battery"]);
+        document.getElementById("boot").textContent = data["Boot Time"];
+        document.getElementById("users").textContent = JSON.stringify(data.Users);
+        document.getElementById("top-cpu").textContent = JSON.stringify(data["Top CPU Processes"]);
+        document.getElementById("top-mem").textContent = JSON.stringify(data["Top Memory Processes"]);
+      } catch(e) { console.error(e); }
     };
   </script>
 </body>
